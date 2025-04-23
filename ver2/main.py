@@ -4,6 +4,7 @@ import time
 import cProfile
 import pstats
 import logging
+from crawler.safe_get import session
 
 
 logging.basicConfig(
@@ -19,8 +20,8 @@ logger.info('Ứng dụng bắt đầu chạy')
 def main():
     database.intital()
     gitstar_crawler.get_repo()
-    # releases_crawler.crawl_releases()
-    # commit_crawler.get_all_commits()
+    releases_crawler.crawl_releases()
+    commit_crawler.get_all_commits()
     pass
 
 if __name__ == "__main__":
@@ -35,3 +36,6 @@ if __name__ == "__main__":
 
     stats = pstats.Stats(profiler)
     stats.strip_dirs().sort_stats('cumulative').print_stats(10)
+    # Cuối chương trình:
+    session.close()
+

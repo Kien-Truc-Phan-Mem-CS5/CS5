@@ -60,15 +60,6 @@ def append_json_chunk(f, data_chunk, is_first):
         print(f"Error writing to JSON file: {e}")
         logger.error("Error in append_json_chunk: %s", e, exc_info=True)
 
-        
-# def save_commits_to_json(all_commit_data):
-#     # Ghi tất cả commit ra file JSON
-#     try:
-#         with open("commits_output.json", "w", encoding="utf-8") as f:
-#             json.dump(all_commit_data, f, indent=4, ensure_ascii=False)
-#     except IOError as e:
-#         print(f"Lỗi khi ghi tệp JSON: {e}")
-#         logger.error("Lỗi trong save_commits_to_json %s", e, exc_info=True)
 
 def get_all_commits():
     # Kết nối tới PostgreSQL
