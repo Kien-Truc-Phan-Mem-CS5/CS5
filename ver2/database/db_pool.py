@@ -35,9 +35,9 @@ def release_connection(conn):
     if connection_pool and conn:
         try:
             connection_pool.putconn(conn)
-            print("đã đóng kết nối")
         except (Exception, DatabaseError) as error:
             logger.error("Error releasing connection back to pool: %s", error)
+            print("đóng kết nối pool ko thành công")
 
 def close_all_connections():
     if connection_pool:
