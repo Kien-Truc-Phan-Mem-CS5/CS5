@@ -46,17 +46,33 @@ def chunked_iterable(iterable, size):
         yield iterable[i:i + size]
 
 def save_releases_chunk_to_db(cur, release_records):
+    if not release_records:
+        return  # Don't attempt empty inserts
+
     try:
+        # Check if the table exists first
+        cur.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'release')")
+        table_exists = cur.fetchone()[0]
+
+        if not table_exists:
+            logger.error("Table 'release' does not exist in database")
+            print("Table 'release' does not exist, please create it first")
+            return
+
         extras.execute_batch(
             cur,
             "INSERT INTO release (release_name, release_tag_name, content, repoID) VALUES (%s, %s, %s, %s)",
             release_records
         )
-        release_records.clear()
+        cur.connection.commit()  # IMPORTANT: Commit after batch execution
         print("đã lưu thành công batch releases vào db")
     except DatabaseError as e:
         print(f"Database error occurred: {e}")
         logger.error("Database error in save_releases_chunk_to_db: %s", e, exc_info=True)
+        cur.connection.rollback()
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error in save_releases_chunk_to_db: {e}", exc_info=True)
         cur.connection.rollback()
 
 def append_json_chunk(f, data_chunk, is_first):
@@ -156,7 +172,7 @@ def crawl_releases():
 
         CHUNK_SIZE = 1000
         BATCH_SIZE = 1000
-        MAX_THREADS = 8
+        MAX_THREADS = 16
 
         os.makedirs("output", exist_ok=True)
         json_path = "output/releases_output.json"

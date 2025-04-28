@@ -29,6 +29,7 @@ def save_commits_chunk_to_db(cur, commit_records):
             "INSERT INTO commit (hash, message, releaseID) VALUES (%s, %s, %s)",
             commit_records
         )
+        cur.connection.commit()
         commit_records.clear()
         print("đã lưu thành công batch commit vào db")
     except DatabaseError as e:
@@ -85,7 +86,7 @@ def get_all_commits():
         print(f"Found {len(releases)} releases with tag names.")
         CHUNK_SIZE = 1000
         BATCH_SIZE = 1000
-        MAX_THREADS = 8
+        MAX_THREADS = 12
 
         os.makedirs("output", exist_ok=True)
         json_path = "output/commits_output.json"

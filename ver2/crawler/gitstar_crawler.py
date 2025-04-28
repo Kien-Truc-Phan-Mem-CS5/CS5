@@ -72,7 +72,7 @@ def crawl_page(page):
     print(f"[Thread] Crawling page {page}...")
 
     try:
-        response = s.safe_get(url)
+        response = requests.get(url)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         print(f"Lỗi khi truy cập {url}: {e}")
@@ -119,7 +119,7 @@ def crawl_page(page):
 
 def get_top_repos(max_repos=5000, max_workers=10):
     repos = []
-    max_pages = (max_repos // 100) # mỗi trang có khoảng 10 repo
+    max_pages = (max_repos // 100) # mỗi trang có khoảng 100 repo
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = [executor.submit(crawl_page, page) for page in range(1, max_pages + 1)]

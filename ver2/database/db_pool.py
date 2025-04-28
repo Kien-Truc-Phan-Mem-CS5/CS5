@@ -7,7 +7,7 @@ try:
     # Khởi tạo connection pool
     connection_pool = pool.SimpleConnectionPool(
         minconn=1,
-        maxconn=10,
+        maxconn=20,
         dbname="crawler",
         user="admin",
         password="secret",
