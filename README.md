@@ -1,21 +1,26 @@
 # GitHub Repository Crawler
+## Nhóm 16 - 2425II_INT3105_2
+Mẫn Thị Bích Phương - 22021119 - K67I-IT2   
+Đàm Quang Đạt - 22028026 - K67I-CS2   
+Nguyễn Văn Lợi - 22021114 - K67I-IT2   
 
 ## Giới thiệu
 Dự án này xây dựng một crawler tự động thu thập thông tin về các bản releases, và commits liên quan từ 5000 repo nhiều sao nhất trên GitHub. Crawler sử dụng GitHub API để lấy dữ liệu từ 5000 repository có nhiều sao nhất và lưu trữ vào cơ sở dữ liệu PostgreSQL cùng với file JSON cho việc phân tích.   
 
-Dưới đây là hướng dẫn cài đặt và tóm tắt về dự án, với báo cáo chi tiết và đầy đủ, xin hãy đọc ở đây:    
-[Báo cáo btl KTPM](https://docs.google.com/document/d/1yQMmqp3aIh690GjjTO0WuX2wOcycXvUJ/edit?usp=sharing&ouid=117858628179603340640&rtpof=true&sd=true)
+Dưới đây là hướng dẫn cài đặt và tóm tắt về dự án, với báo cáo chi tiết và đầy đủ, xin hãy đọc ở đây:  
+### ***[Báo cáo btl KTPM](https://docs.google.com/document/d/1yQMmqp3aIh690GjjTO0WuX2wOcycXvUJ/edit?usp=sharing&ouid=117858628179603340640&rtpof=true&sd=true)***
 
+   
 ## Yêu cầu hệ thống
-- Python 3.8+
+- Python 3.13
 - PostgreSQL
 - Các thư viện Python: `requests`, `psycopg2`, `backoff`, `threading`,...
 
 ## Cài đặt
 1. **Clone repository:**
    ```bash
-   git clone <repository_url>
-   cd <repository_directory>
+   git clone https://github.com/Kien-Truc-Phan-Mem-CS5/CS5.git
+   cd CS5/ver2
    ```
 
 2. **Cài đặt các thư viện cần thiết:**
