@@ -68,11 +68,11 @@ Khi thực hiện thu thập tự động các thông tin liên quan đến repo
 
 ## Kết Quả
 | Cải tiến | Xử lí song song | Số token | Thời gian |
-|--------|------|----|--------|
+|--------|------|---------|------|
 | Triển khai đơn giản | Không | 4 : lần lượt | 16h 17p |
 | Áp dụng tối ưu csdl <br> Xử lí song song <br> Xử lí các lỗi dữ liệu  | Có : 4 threads | 4 : lần lượt | 7h 38p |
 | Tăng số threads <br> Tuỳ chỉnh số threads cho từng hoạt động <br> Dùng user-agent ngẫu nhiên   | Có : 12 threads | 5 : luân phiên | 3h 13p |
-| Tăng số threads <br> Luân phiên token | Có : 16 threads commit, 32 threads release | 6 : luân phiên | 2h 45p |
-| Tăng số threads | Có : 32 threads commit, 64 threads release | 8 : luân phiên | 2h 6p |
+| Tăng số threads <br> Luân phiên token | Có : 16 commit, 32 release | 6 : luân phiên | 2h 45p |
+| Tăng số threads | Có : 32 commit, 64 release | 8 : luân phiên | 2h 6p |
 
 
