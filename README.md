@@ -17,7 +17,7 @@ Crawler này thực hiện các công việc sau:
 Dữ liệu được lưu trữ trong cơ sở dữ liệu PostgreSQL.
 
 ## Các Vấn Đề Gặp Phải
-Khi thực hiện thu thập tự động các thông tin liên quan đến repo, phiên bản triển khai đơn giản đã gặp một số vấn đề sau:
+Khi thực hiện thu thập tự động các thông tin liên quan đến repositories, phiên bản triển khai đơn giản đã gặp một số vấn đề sau:
 
 ### 1. Giới Hạn Tốc Độ Truy Cập
 - Giới hạn tốc độ truy cập (rate limit): lỗi kết nối `requests.exceptions.ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))`
@@ -67,3 +67,12 @@ Khi thực hiện thu thập tự động các thông tin liên quan đến repo
 - Kết hợp với chiến lược luân phiên token để phân tải đều, hạn chế rủi ro bị chặn
 
 ## Kết Quả
+| Cải tiến | Xử lí song song | Số token | Thời gian |
+|--------|------|----|--------|
+| Triển khai đơn giản | Không | 4 : lần lượt | 16h 17p |
+| Áp dụng tối ưu csdl <br> Xử lí song song <br> Xử lí các lỗi dữ liệu  | Có : 4 threads | 4 : lần lượt | 7h 38p |
+| Tăng số threads <br> Tuỳ chỉnh số threads cho từng hoạt động <br> Dùng user-agent ngẫu nhiên   | Có : 12 threads | 5 : luân phiên | 3h 13p |
+| Tăng số threads <br> Luân phiên token | Có : 16 threads commit, 32 threads release | 6 : luân phiên | 2h 45p |
+| Tăng số threads | Có : 32 threads commit, 64 threads release | 8 : luân phiên | 2h 6p |
+
+
