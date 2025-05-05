@@ -5,107 +5,65 @@ Mẫn Thị Bích Phương - 22021119 - K67I-IT2
 Nguyễn Văn Lợi - 22021114 - K67I-IT2   
 
 ## Giới thiệu
-Dự án này xây dựng một crawler tự động thu thập thông tin về các bản releases, và commits liên quan từ 5000 repo nhiều sao nhất trên GitHub. Crawler sử dụng GitHub API để lấy dữ liệu từ 5000 repository có nhiều sao nhất và lưu trữ vào cơ sở dữ liệu PostgreSQL cùng với file JSON cho việc phân tích.   
-
-Dưới đây là hướng dẫn cài đặt và tóm tắt về dự án, với báo cáo chi tiết và đầy đủ, xin hãy đọc ở đây:  
+Dưới đây là báo cáo ngắn gọn về dự án, với báo cáo chi tiết và đầy đủ, xin hãy đọc ở đây:  
 ### ***[Báo cáo btl KTPM](https://docs.google.com/document/d/1yQMmqp3aIh690GjjTO0WuX2wOcycXvUJ/edit?usp=sharing&ouid=117858628179603340640&rtpof=true&sd=true)***
 
-   
-## Yêu cầu hệ thống
-- Python 3.13
-- PostgreSQL
-- Các thư viện Python: `requests`, `psycopg2`, `backoff`, `threading`,...
+## TTriển khai crawler cơ bản 
+Crawler này thực hiện các công việc sau:
+- Thu thập danh sách top 5000 repository từ Gitstar
+- Lấy thông tin các bản phát hành (releases) của từng repository
+- Thu thập thông tin commit liên quan đến mỗi bản phát hành
 
-## Cài đặt
-1. **Clone repository:**
-   ```bash
-   git clone https://github.com/Kien-Truc-Phan-Mem-CS5/CS5.git
-   cd CS5/ver2
-   ```
+Dữ liệu được lưu trữ trong cơ sở dữ liệu PostgreSQL.
 
-2. **Cài đặt các thư viện cần thiết:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Các Vấn Đề Gặp Phải
+Khi thực hiện thu thập tự động các thông tin liên quan đến repo, phiên bản triển khai đơn giản đã gặp một số vấn đề sau:
 
-3. **Cấu hình cơ sở dữ liệu:**
-   - Tạo database PostgreSQL
-   - Cập nhật trong database các thông tin kết nối trong `database/db_pool.py`:
-     ```python
-     connection_pool = pool.SimpleConnectionPool(
-         minconn=1,
-         maxconn=20,
-         dbname="crawler",
-         user="admin",
-         password="secret",
-         host="localhost",
-         port="5432"
-     )
-     ```
+### 1. Giới Hạn Tốc Độ Truy Cập
+- Giới hạn tốc độ truy cập (rate limit): lỗi kết nối `requests.exceptions.ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))`
+- Giới hạn API mặc định: 60 yêu cầu/giờ với yêu cầu không xác thực bằng token
+- Giới hạn khi xác thực bằng token: 5.000 yêu cầu/giờ
 
-4. **Cấu hình GitHub API tokens:**
-   - Thêm GitHub tokens vào `crawler/safe_get.py` để tăng giới hạn API
-     ```python
-     GITHUB_TOKENS = [
-         "token 1",
-         "token 2",
-         # Thêm các token khác nếu có
-     ]
-     ```
-     
-## Cấu trúc phiên bản cuối
-```
-ver2/
-├── crawler/
-│   ├── gitstar_crawler.py   # Thu thập danh sách repositories
-│   ├── releases_crawler.py  # Thu thập thông tin releases và tags
-│   ├── commit_crawler.py    # Thu thập thông tin commits
-│   └── safe_get.py          # Xử lý requests an toàn với GitHub API
-├── database/
-│   ├── database.py          # Khởi tạo database
-│   ├── db_pool.py           # Quản lý connection pool
-│   └── query.py             # Các hàm truy vấn database
-├── output/                  # Thư mục chứa dữ liệu output dạng JSON
-└── main.py                  # Script chính điều khiển quá trình crawl
-```
+### 2. Dữ Liệu Repository Không Đầy Đủ
+- Một số repository không có thông tin release hoặc tag hoặc cả 2
+- Không thể thu thập thông tin liên quan cho các trường hợp này
 
-## Cách chạy
-```bash
-python main.py
-```
+### 3. Vấn Đề Ký Tự Đặc Biệt
+- API gặp lỗi với các ký tự đặc biệt trong SHA của tag_name
+- GitHub không tìm thấy commit/branch tương ứng với tag chứa ký tự đặc biệt
 
-Quá trình thực thi:
-1. Khởi tạo cơ sở dữ liệu
-2. Thu thập danh sách repositories từ GitStar
-3. Thu thập thông tin releases/tags từ các repositories
-4. Thu thập thông tin commits liên quan đến releases
+### 4. Vấn Đề Hiệu Suất
+- Tốc độ chậm do số lượng yêu cầu lớn (5000 repos, ~82000 releases/tags), trong khi có giới hạn về api
+- Ghi dữ liệu vào database chưa tối ưu gây độ trễ, ảnh hưởng hiệu suất tổng thể
 
-## Giải pháp đã áp dụng
-1. **Quản lý GitHub API Rate Limits:**
-   - Sử dụng nhiều tokens để luân phiên gửi requests
-   - Theo dõi lượng token đã sử dụng, thời gian refresh, dừng request nếu đã hết token
+## Các Cải Tiến Đã Triển Khai
 
-2. **Tối ưu hiệu năng:**
-   - Sử dụng ThreadPoolExecutor để xử lý đa luồng
-   - Lưu dữ liệu theo batch và dùng chunk để giảm số lượng truy vấn
-   - Connection pooling để quản lý kết nối database hiệu quả
+### A. Quản Lý Giới Hạn Truy Cập
+- Xác thực bằng token tăng giới hạn lên 5.000 yêu cầu/giờ
+- Triển khai `Exponential Backoff` để tự động thử lại khi gặp lỗi
+- Theo dõi hạn mức sử dụng API qua endpoint `/rate_limit`
+- Luân chuyển token hoặc chờ đến thời điểm reset khi cần
 
-3. **Xử lý lỗi:**
-   - Logging chi tiết khi chạy và vào các file json trong output
-   - Xử lý ngoại lệ với cơ chế rollback transaction
-   - Xử lý repositories không có releases bằng cách kiểm tra tags
+### B. Tối Ưu Hóa Cơ Sở Dữ Liệu
+- Ghi dữ liệu theo lô (batch) để giảm số lượng truy vấn, tăng tốc độ ghi.
+- Sử dụng connection pooling và tối ưu truy vấn
+- Hạn chế các phép JOIN phức tạp
+- Đọc dữ liệu theo từng phần (chunk) để tránh tràn bộ nhớ khi xử lí dữ liệu lớn
 
-4. **Lưu trữ dữ liệu:**
-   - PostgreSQL với các bảng `repo`, `release`, và `commit`
-   - File JSON cho phân tích
+### C. Tăng Độ Ổn Định Hệ Thống
+- Cơ chế Retry kết hợp backoff + jitter cho lỗi mạng hoặc lỗi tạm thời từ GitHub
+- Tái sử dụng kết nối HTTP với `requests.Session()`
 
-## Theo dõi hiệu suất
-Dự án sử dụng cProfile để ghi lại hiệu suất thực thi. Kết quả được hiển thị sau khi chạy xong, cho biết các hàm tốn nhiều thời gian nhất.
+### D. Xử Lý Repository Thiếu Dữ Liệu
+- Với repo không có release: sử dụng thông tin tag và commit thay thế
+- Với repo không có cả release lẫn tag: chỉ lưu thông tin commit (các trường liên quan để trống)
 
-## Hướng phát triển
-- Sử dụng proxy để tối thiểu khả năng bị chặn (Dù trong quá trình chạy chưa từng ghi nhận trường hợp bị chặn/ban)
-- Thêm cơ chế lưu trạng thái để tiếp tục từ điểm dừng
+### E. Xử Lý Song Song
+- Triển khai `ThreadPoolExecutor` để thu thập dữ liệu đồng thời với nhiều yêu cầu
+- Lợi ích:
+  - Tăng tốc độ xử lý tổng thể, do nhiều request được xử lý đồng thời
+  - Tận dụng tối đa hạn mức API của nhiều token
+  - Tránh tình trạng token bị reset trước khi sử dụng hết
+- Kết hợp với chiến lược luân phiên token để phân tải đều, hạn chế rủi ro bị chặn
 
-## Tài liệu tham khảo
-- [GitHub REST API Documentation](https://docs.github.com/en/rest)
-- [Gitstar Ranking](https://gitstar-ranking.com)
+## Kết Quả
