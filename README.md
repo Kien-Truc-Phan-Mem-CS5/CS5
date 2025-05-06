@@ -70,9 +70,10 @@ Khi thực hiện thu thập tự động các thông tin liên quan đến repo
 | Cải tiến | Xử lí song song | Số token | Thời gian |
 |--------|------|---------|------|
 | Triển khai đơn giản | Không | 4 : lần lượt | 16h 17p |
-| Áp dụng tối ưu csdl <br> Xử lí song song <br> Xử lí các lỗi dữ liệu  | Có : 4 threads | 4 : lần lượt | 7h 38p |
-| Tăng số threads <br> Tuỳ chỉnh số threads cho từng hoạt động <br> Dùng user-agent ngẫu nhiên   | Có : 12 threads | 5 : luân phiên | 3h 13p |
-| Tăng số threads <br> Luân phiên token | Có : 16 commit, 32 release | 6 : luân phiên | 2h 45p |
+| Áp dụng tối ưu csdl <br> Xử lí song song <br> Xử lí các lỗi dữ liệu <br> Retry + backoff  | Có : 4 threads | 4 : lần lượt | 7h 38p |
+| Tăng số threads  <br> Dùng user-agent ngẫu nhiên <br> Luân phiên token  | Có : 12 threads | 5 : luân phiên | 3h 13p |
+| Tăng số threads <br> Tuỳ chỉnh số threads cho từng hoạt động  | Có : 16 commit, 32 release | 6 : luân phiên | 2h 45p |
 | Tăng số threads | Có : 32 commit, 64 release | 8 : luân phiên | 2h 6p |
+| Tăng số threads | Có : 48 commit, 64 release | 10 : luân phiên | 1h 19p |
 
 
