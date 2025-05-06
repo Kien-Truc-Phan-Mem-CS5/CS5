@@ -172,7 +172,7 @@ def crawl_releases():
 
         CHUNK_SIZE = 1000
         BATCH_SIZE = 1000
-        MAX_THREADS = 16
+        MAX_THREADS = 64
 
         os.makedirs("output", exist_ok=True)
         json_path = "output/releases_output.json"

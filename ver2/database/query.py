@@ -92,41 +92,31 @@ def get_all_tag_names(conn, cur):
         logger.error("Lỗi trong get_all_tag_names: %s", e, exc_info=True)
         conn.rollback()
         return []
+
+def get_releases_by_repo(conn, cur, user, repo_name):
+    try:
+        cur.execute("""
+            SELECT r.id, r.release_tag_name
+            FROM release r
+            JOIN repo ON r.repoID = repo.id
+            WHERE repo."user" = %s AND repo.name = %s AND r.release_tag_name IS NOT NULL
+            ORDER BY r.id ASC
+        """, (user, repo_name))
+        return cur.fetchall()
+    except psycopg2.DatabaseError as e:
+        print(f'Lỗi khi lấy danh sách releases của repo {user}/{repo_name}: {e}')
+        logger.error("Lỗi trong get_releases_by_repo: %s", e, exc_info=True)
+        conn.rollback()
+        return []
     
 def insert_commit(conn, cur,commit_hash, commit_msg, release_id):
     try:
         cur.execute("""
             INSERT INTO commit (hash, message, releaseID)
             VALUES (%s, %s, %s)
-            ON CONFLICT DO NOTHING;
+            ON CONFLICT (hash, releaseID) DO NOTHING;
         """, (commit_hash, commit_msg, release_id))
     except psycopg2.DatabaseError as e:
         print(f"Lỗi khi ghi vào cơ sở dữ liệu: {e}")
         logger.error("Lỗi trong insert_commit: %s", e, exc_info=True)
         conn.rollback()
-# # Truy vấn dữ liệu
-# cur.execute("DELETE FROM commit;")
-# conn.commit()
-# cur.execute("SELECT * FROM commit;")
-# rows = cur.fetchall()
-
-# # Hiển thị dữ liệu
-# print("Danh sách repo:")
-# for row in rows:
-#     print(row)
-
-
-# # cur.execute("ALTER TABLE release ADD COLUMN release_name TEXT;")
-# # cur.execute("ALTER TABLE release ADD COLUMN release_tag_name TEXT;")
-# # conn.commit()
-# # cur.execute("""
-# #     SELECT column_name, data_type 
-# #     FROM information_schema.columns 
-# #     WHERE table_name = 'release';
-# # """)
-# # columns = cur.fetchall()
-# # print("Các cột trong bảng 'release':")
-# # for name, dtype in columns:
-# #     print(f"  - {name} ({dtype})")
-# cur.close()
-# conn.close()

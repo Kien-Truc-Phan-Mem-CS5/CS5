@@ -56,48 +56,58 @@ def check_rate_limit(token):
         "Accept": "application/vnd.github+json"
     }
 
-    response = requests.get(url, headers=headers)
+    try:
+        response = requests.get(url, headers=headers)
 
-    if response.status_code == 200:
-        data = response.json()
-        core_limit = data['resources']['core']
-        remaining = core_limit['remaining']
-        reset_time = core_limit['reset']
+        if response.status_code == 200:
+            data = response.json()
+            core_limit = data['resources']['core']
+            remaining = core_limit['remaining']
+            reset_time = core_limit['reset']  # Unix timestamp when rate limit resets
 
-        # Chuyển thời gian reset từ timestamp thành giờ:phút
-        reset_time_formatted = time.strftime('%H:%M:%S', time.gmtime(reset_time))
+            # Formatted time for logging
+            reset_time_formatted = time.strftime('%H:%M:%S', time.localtime(reset_time))
 
-        return remaining, reset_time_formatted
-    else:
-        logger.error(f"Lỗi khi kiểm tra rate limit: {response.status_code}")
-        return None, None
+            return remaining, reset_time_formatted, reset_time  # Return raw timestamp too
+        else:
+            logger.error(f"Lỗi khi kiểm tra rate limit: {response.status_code}")
+            return None, None, None
+    except Exception as e:
+        logger.error(f"Exception in check_rate_limit: {str(e)}")
+        return None, None, None
 
 def get_next_token():
     global current_token_index
 
-    # First try: find a token that hasn't reached 500 requests
+    # First try: find a token that hasn't reached 4980 requests
     start_index = current_token_index
     for _ in range(len(GITHUB_TOKEN_INFO)):
         info = GITHUB_TOKEN_INFO[current_token_index]
         current_token_index = (current_token_index + 1) % len(GITHUB_TOKEN_INFO)
 
-        # Check if this token has used fewer than 500 requests
-        if info["count"] < 500:
-            remaining, reset_time = check_rate_limit(info["token"])
+        # Check if this token has used fewer than 4980 requests
+        if info["count"] < 4980:
+            remaining, reset_time_fmt, reset_timestamp = check_rate_limit(info["token"])
             if remaining and remaining > 10:  # Still ensure it has quota
-                logger.info(f"Token {info['token'][-4:]} has used {info['count']}/500 requests and has {remaining} quota remaining. Using this token.")
+                # Update the reset timestamp
+                if reset_timestamp:
+                    info["reset"] = reset_timestamp
+                logger.info(f"Token {info['token'][-4:]} has used {info['count']}/5000 requests and has {remaining} quota remaining. Using this token.")
                 return info["token"]
 
-    # Second try: reset counts if all tokens have reached 500 requests
-    if all(info["count"] >= 500 for info in GITHUB_TOKEN_INFO):
-        logger.info("All tokens have reached 500 requests limit. Resetting counts.")
+    # Second try: reset counts if all tokens have reached 4970 requests
+    if all(info["count"] >= 4980 for info in GITHUB_TOKEN_INFO):
+        logger.info("All tokens have reached 4960 requests limit. Resetting counts.")
         for info in GITHUB_TOKEN_INFO:
             info["count"] = 0
 
     # Third try: get any token with remaining quota
     for info in GITHUB_TOKEN_INFO:
-        remaining, reset_time = check_rate_limit(info["token"])
+        remaining, reset_time_fmt, reset_timestamp = check_rate_limit(info["token"])
         if remaining and remaining > 20:
+            # Update the reset timestamp
+            if reset_timestamp:
+                info["reset"] = reset_timestamp
             current_token_index = GITHUB_TOKEN_INFO.index(info)
             logger.info(f"Using token {info['token'][-4:]} with {remaining} quota remaining.")
             return info["token"]

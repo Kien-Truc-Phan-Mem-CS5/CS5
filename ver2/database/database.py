@@ -35,7 +35,8 @@ def intital():
         CREATE TABLE IF NOT EXISTS commit (
             hash TEXT NOT NULL,
             message TEXT NOT NULL,
-            releaseID INT NOT NULL REFERENCES release(id)
+            releaseID INT NOT NULL REFERENCES release(id),
+            CONSTRAINT unique_commit UNIQUE (hash, releaseID)
         );
         """)
         q.save_change(conn)
