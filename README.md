@@ -12,7 +12,7 @@ Dưới đây là báo cáo ngắn gọn về dự án, với báo cáo chi ti�
 Crawler này thực hiện các công việc sau:
 - Thu thập danh sách top 5000 repository từ Gitstar
 - Lấy thông tin các bản phát hành (releases) của từng repository
-- Thu thập thông tin commit liên quan đến mỗi bản phát hành
+- Thu thập thông tin commit 
 
 Dữ liệu được lưu trữ trong cơ sở dữ liệu PostgreSQL.
 
