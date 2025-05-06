@@ -20,12 +20,12 @@ def get_compare_commits(user, repo_name, base_tag, head_tag):
     encoded_base_tag = quote(base_tag, safe='')
     encoded_head_tag = quote(head_tag, safe='')
     url = f"https://api.github.com/repos/{user}/{repo_name}/compare/{encoded_base_tag}...{encoded_head_tag}"
-    
+
     response = s.safe_get(url)
     if not response:
         logger.error(f"Failed to get comparison between {base_tag} and {head_tag} for {user}/{repo_name}")
         return []
-    
+
     data = response.json()
     return data.get('commits', [])
 
@@ -36,12 +36,13 @@ def get_repo_releases(conn, cur, user, repo_name):
     """
     try:
         cur.execute("""
-            SELECT r.id, r.release_tag_name
-            FROM release r
-            JOIN repo ON r.repoID = repo.id
-            WHERE repo."user" = %s AND repo.name = %s AND r.release_tag_name IS NOT NULL
-            ORDER BY r.id ASC
-        """, (user, repo_name))
+                    SELECT r.id, r.release_tag_name
+                    FROM release r
+                             JOIN repo ON r.repoID = repo.id
+                    WHERE repo."user" = %s
+                      AND repo.name = %s
+                    ORDER BY r.id
+                    """, (user, repo_name))
         return cur.fetchall()
     except DatabaseError as e:
         logger.error(f"Database error getting releases for {user}/{repo_name}: {e}")
@@ -83,39 +84,40 @@ def append_json_chunk(f, data_chunk, is_first):
 def crawl_commits_for_release_pair(user, repo_name, releases):
     results = []
     json_entries = []
-    
+
     if not releases:
         return results, json_entries
-    
+
     # For each pair of consecutive releases
-    for i in range(1, len(releases)):
-        prev_release_id, prev_tag = releases[i-1]
-        curr_release_id, curr_tag = releases[i]
-        
-        try:
-            commits = get_compare_commits(user, repo_name, prev_tag, curr_tag)
-            for commit in commits:
-                commit_hash = commit.get("sha")
-                commit_msg = commit.get("commit", {}).get("message")
+    if len(releases) > 1:
+        for i in range(1, len(releases) - 1):
+            prev_release_id, prev_tag = releases[i]
+            curr_release_id, curr_tag = releases[i-1]
 
-                if not commit_hash or not commit_msg:
-                    continue
+            try:
+                commits = get_compare_commits(user, repo_name, prev_tag, curr_tag)
+                for commit in commits:
+                    commit_hash = commit.get("sha")
+                    commit_msg = commit.get("commit", {}).get("message")
 
-                results.append((commit_hash, commit_msg, curr_release_id))
-                json_entries.append({
-                    "repo": f"{user}/{repo_name}",
-                    "release_tag_name": curr_tag,
-                    "previous_tag": prev_tag,
-                    "commit_hash": commit_hash,
-                    "commit_message": commit_msg
-                })
-        except requests.exceptions.RequestException as e:
-            print(f'Lỗi khi lấy commit cho {user}/{repo_name} từ {prev_tag} đến {curr_tag}: {e}')
-            logger.error("Lỗi trong crawl_commits_for_release_pair: %s", e, exc_info=True)
-    
+                    if not commit_hash or not commit_msg:
+                        continue
+
+                    results.append((commit_hash, commit_msg, curr_release_id))
+                    json_entries.append({
+                        "repo": f"{user}/{repo_name}",
+                        "release_tag_name": curr_tag,
+                        "previous_tag": prev_tag,
+                        "commit_hash": commit_hash,
+                        "commit_message": commit_msg
+                    })
+            except requests.exceptions.RequestException as e:
+                print(f'Lỗi khi lấy commit cho {user}/{repo_name} từ {prev_tag} đến {curr_tag}: {e}')
+                logger.error("Lỗi trong crawl_commits_for_release_pair: %s", e, exc_info=True)
+
     # For the first release, get all commits up to that point
     if releases:
-        first_release_id, first_tag = releases[0]
+        first_release_id, first_tag = releases[len(releases) - 1]
         try:
             # For the first tag, we get all commits up to that tag
             url = f"https://api.github.com/repos/{user}/{repo_name}/commits?sha={quote(first_tag, safe='')}"
@@ -140,7 +142,7 @@ def crawl_commits_for_release_pair(user, repo_name, releases):
         except requests.exceptions.RequestException as e:
             print(f'Lỗi khi lấy commit cho {user}/{repo_name} phiên bản đầu tiên {first_tag}: {e}')
             logger.error("Lỗi khi lấy commit cho phiên bản đầu tiên: %s", e, exc_info=True)
-            
+
     return results, json_entries
 
 
@@ -152,10 +154,10 @@ def process_repo(repo):
         # Get all releases for this repo
         releases = get_repo_releases(conn, cur, user, repo_name)
         print(f"Found {len(releases)} releases for {user}/{repo_name}")
-        
+
         if not releases:
             return [], []
-            
+
         return crawl_commits_for_release_pair(user, repo_name, releases)
     finally:
         if conn:
